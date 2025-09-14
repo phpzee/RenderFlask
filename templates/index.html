@@ -1,1 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TTS News Anchor</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #e8f5e9;
+      color: #333;
+    }
+    header {
+      background: #2e7d32;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      font-size: 1.5em;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+    }
+    textarea {
+      width: 100%;
+      height: 150px;
+      padding: 12px;
+      font-size: 16px;
+      border: 2px solid #2e7d32;
+      border-radius: 10px;
+      resize: vertical;
+    }
+    select, button {
+      padding: 12px 18px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    select {
+      background: #a5d6a7;
+      color: #1b5e20;
+    }
+    button {
+      background: #2e7d32;
+      color: white;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #1b5e20;
+    }
+    .progress {
+      width: 100%;
+      height: 12px;
+      background: #c8e6c9;
+      border-radius: 6px;
+      margin-top: 15px;
+      display: none;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: #2e7d32;
+      border-radius: 6px;
+      transition: width 0.3s;
+    }
+    .audio-box {
+      margin-top: 20px;
+      display: none;
+    }
+    footer {
+      text-align: center;
+      padding: 15px;
+      color: #666;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <header>🎙️ Hindi & Urdu News Anchor TTS</header>
+  <div class="container">
+    <p>Enter your Hindi or Urdu text below and generate a natural news anchor style MP3.</p>
+    
+    <textarea id="ttsText" placeholder="Type Hindi/Urdu text here..."></textarea>
+    
+    <select id="lang">
+      <option value="hi">Hindi</option>
+      <option value="ur">Urdu</option>
+    </select>
+    
+    <button onclick="generateTTS()">Generate Voice</button>
+    
+    <div class="progress" id="progress">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    
+    <div class="audio-box" id="audioBox">
+      <p><b>Playback:</b></p>
+      <audio controls id="ttsAudio"></audio>
+      <p><a id="downloadLink" href="#" download>Download MP3</a></p>
+    </div>
+  </div>
+  
+  <footer>© 2025 TTS News Anchor | Powered by Zeeshan Azmi</footer>
+  
+  <script>
+    function simulateProgress() {
+      let progressBar = document.getElementById("progressBar");
+      let width = 0;
+      let interval = setInterval(() => {
+        if (width >= 90) {
+          clearInterval(interval);
+        } else {
+          width += 10;
+          progressBar.style.width = width + "%";
+        }
+      }, 300);
+    }
 
+    async function generateTTS() {
+      const text = document.getElementById("ttsText").value.trim();
+      const lang = document.getElementById("lang").value;
+      const progress = document.getElementById("progress");
+      const progressBar = document.getElementById("progressBar");
+      const audioBox = document.getElementById("audioBox");
+      const audioPlayer = document.getElementById("ttsAudio");
+      const downloadLink = document.getElementById("downloadLink");
+
+      if (!text) {
+        alert("⚠️ Please enter some text first!");
+        return;
+      }
+
+      progress.style.display = "block";
+      progressBar.style.width = "0%";
+      simulateProgress();
+
+      try {
+        let res = await fetch("/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, lang })
+        });
+
+        let data = await res.json();
+        if (data.error) {
+          alert("❌ Error: " + data.error);
+          progress.style.display = "none";
+          return;
+        }
+
+        progressBar.style.width = "100%";
+        setTimeout(() => { progress.style.display = "none"; }, 1000);
+
+        audioBox.style.display = "block";
+        audioPlayer.src = data.file_url;
+        downloadLink.href = data.file_url;
+
+      } catch (err) {
+        alert("❌ Something went wrong: " + err);
+        progress.style.display = "none";
+      }
+    }
+  </script>
+</body>
+</html>
