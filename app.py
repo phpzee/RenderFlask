@@ -1,12 +1,10 @@
-from flask import Flask, render_template, request, send_file, jsonify
+from flask import Flask, request, send_file, jsonify, Response
 from gtts import gTTS
 from io import BytesIO
-import html
-import re
+import html, re
 
 app = Flask(__name__)
 
-# Female voices only
 VOICES = {
     "hi_female_normal": {"lang":"hi","slow":False},
     "hi_female_slow": {"lang":"hi","slow":True},
@@ -17,48 +15,46 @@ VOICES = {
 }
 
 def process_text_for_anchor(text):
-    """
-    Anchor-style emphasis:
-    - Ignore punctuation like । ! ?
-    - Pause slightly after commas
-    - Reduce multiple spaces to single
-    """
     text = text.strip()
     if not text:
         return ""
-    # Replace multiple spaces with single
     text = re.sub(r'\s+', ' ', text)
-    # Replace end-of-sentence punctuations with period for simplicity
     text = re.sub(r'[।!?]', '', text)
-    # Keep commas for pause
     sentences = re.split(r'(?<=,)|(?<=\.)', text)
     processed = []
     for s in sentences:
         s = s.strip()
         if not s:
             continue
-        # Emphasize news keywords
         s = re.sub(r'(मुख्य|ताज़ा|ब्रेकिंग|विशेष|सूचना)', r'\1 ..', s)
         processed.append(s)
     return " ".join(processed)
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    with open("index.html", "r", encoding="utf-8") as f:
+        return Response(f.read(), mimetype="text/html")
 
 @app.route("/preview", methods=["POST"])
 def preview():
     try:
         text = request.form.get("text","").strip()
         voice = request.form.get("voice","hi_female_normal")
+        speed = float(request.form.get("speed","1.0"))
+        pitch = request.form.get("pitch","1.0")   # not used
+        volume = request.form.get("volume","1.0") # not used
+
         if not text:
             return jsonify({"error":"Please enter text."}),400
 
         voice_settings = VOICES.get(voice, {"lang":"hi","slow":False})
         processed_text = process_text_for_anchor(html.unescape(text))
 
+        # gTTS only supports slow=True/False
+        slow_mode = True if speed < 1.0 else voice_settings["slow"]
+
         tts_fp = BytesIO()
-        tts = gTTS(text=processed_text, lang=voice_settings["lang"], slow=voice_settings["slow"])
+        tts = gTTS(text=processed_text, lang=voice_settings["lang"], slow=slow_mode)
         tts.write_to_fp(tts_fp)
         tts_fp.seek(0)
 
@@ -71,14 +67,19 @@ def convert():
     try:
         text = request.form.get("text","").strip()
         voice = request.form.get("voice","hi_female_normal")
+        speed = float(request.form.get("speed","1.0"))
+        pitch = request.form.get("pitch","1.0")   # not used
+        volume = request.form.get("volume","1.0") # not used
+
         if not text:
             return "Error: Please enter text.",400
 
         voice_settings = VOICES.get(voice, {"lang":"hi","slow":False})
         processed_text = process_text_for_anchor(html.unescape(text))
+        slow_mode = True if speed < 1.0 else voice_settings["slow"]
 
         tts_fp = BytesIO()
-        tts = gTTS(text=processed_text, lang=voice_settings["lang"], slow=voice_settings["slow"])
+        tts = gTTS(text=processed_text, lang=voice_settings["lang"], slow=slow_mode)
         tts.write_to_fp(tts_fp)
         tts_fp.seek(0)
 
