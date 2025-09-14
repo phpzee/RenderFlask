@@ -6,7 +6,7 @@ import re
 
 app = Flask(__name__)
 
-# Female Hindi voices only
+# Female voices only
 VOICES = {
     "hi_female_normal": {"lang":"hi","slow":False},
     "hi_female_slow": {"lang":"hi","slow":True},
@@ -16,23 +16,31 @@ VOICES = {
     "hi_female_soft": {"lang":"hi","slow":False}
 }
 
-# Process text for anchor style
 def process_text_for_anchor(text):
+    """
+    Anchor-style emphasis:
+    - Ignore punctuation like । ! ?
+    - Pause slightly after commas
+    - Reduce multiple spaces to single
+    """
     text = text.strip()
     if not text:
         return ""
-    # Remove all punctuation for speaking
-    text = re.sub(r'[।!?,;:"\'\(\)\[\]\{\}]', '', text)
-    sentences = text.split(".")
+    # Replace multiple spaces with single
+    text = re.sub(r'\s+', ' ', text)
+    # Replace end-of-sentence punctuations with period for simplicity
+    text = re.sub(r'[।!?]', '', text)
+    # Keep commas for pause
+    sentences = re.split(r'(?<=,)|(?<=\.)', text)
     processed = []
     for s in sentences:
         s = s.strip()
         if not s:
             continue
-        # Add anchor emphasis keywords
-        s = re.sub(r'(Breaking|Update|Alert|Special|Information|मुख्य|ताज़ा|ब्रेकिंग|विशेष|सूचना)', r'\1 ..', s, flags=re.I)
+        # Emphasize news keywords
+        s = re.sub(r'(मुख्य|ताज़ा|ब्रेकिंग|विशेष|सूचना)', r'\1 ..', s)
         processed.append(s)
-    return " . ".join(processed)
+    return " ".join(processed)
 
 @app.route("/")
 def index():
@@ -44,7 +52,7 @@ def preview():
         text = request.form.get("text","").strip()
         voice = request.form.get("voice","hi_female_normal")
         if not text:
-            return jsonify({"error":"Please enter some text."}),400
+            return jsonify({"error":"Please enter text."}),400
 
         voice_settings = VOICES.get(voice, {"lang":"hi","slow":False})
         processed_text = process_text_for_anchor(html.unescape(text))
@@ -64,7 +72,7 @@ def convert():
         text = request.form.get("text","").strip()
         voice = request.form.get("voice","hi_female_normal")
         if not text:
-            return "Error: Please enter some text.",400
+            return "Error: Please enter text.",400
 
         voice_settings = VOICES.get(voice, {"lang":"hi","slow":False})
         processed_text = process_text_for_anchor(html.unescape(text))
@@ -76,7 +84,7 @@ def convert():
 
         return send_file(tts_fp, mimetype="audio/mpeg",
                          as_attachment=True,
-                         download_name="news_anchor.mp3")
+                         download_name="Hindi_News_Anchor.mp3")
     except Exception as e:
         return f"Error: {str(e)}",500
 
