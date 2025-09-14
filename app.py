@@ -6,37 +6,31 @@ import re
 
 app = Flask(__name__)
 
-# Only female Hindi voices
+# Female Hindi voices only
 VOICES = {
-    "hi_female_normal": {"lang": "hi", "slow": False},
-    "hi_female_slow": {"lang": "hi", "slow": True},
-    "hi_female_cheerful": {"lang": "hi", "slow": False},
-    "hi_female_calm": {"lang": "hi", "slow": False},
-    "hi_female_urgent": {"lang": "hi", "slow": False},
-    "hi_female_soft": {"lang": "hi", "slow": False}
+    "hi_female_normal": {"lang":"hi","slow":False},
+    "hi_female_slow": {"lang":"hi","slow":True},
+    "hi_female_cheerful": {"lang":"hi","slow":False},
+    "hi_female_calm": {"lang":"hi","slow":False},
+    "hi_female_urgent": {"lang":"hi","slow":False},
+    "hi_female_soft": {"lang":"hi","slow":False}
 }
 
-# Keywords for emphasis
-KEYWORDS = ["Breaking", "Exclusive", "Update", "Alert", "News", "Report"]
-
+# Process text for anchor style
 def process_text_for_anchor(text):
-    """
-    Anchor-style text processing:
-    - Ignores punctuation when reading
-    - Adds emphasis on keywords
-    - Natural pause after sentences
-    """
-    text = html.unescape(text.strip())
+    text = text.strip()
     if not text:
         return ""
-    # Replace punctuation with period for splitting
-    text_clean = re.sub(r"[।!?]", ".", text)
-    sentences = [s.strip() for s in text_clean.split(".") if s.strip()]
+    # Remove all punctuation for speaking
+    text = re.sub(r'[।!?,;:"\'\(\)\[\]\{\}]', '', text)
+    sentences = text.split(".")
     processed = []
     for s in sentences:
-        # Add emphasis to keywords
-        for kw in KEYWORDS:
-            s = re.sub(fr"\b{kw}\b", f"{kw} ...", s, flags=re.IGNORECASE)
+        s = s.strip()
+        if not s:
+            continue
+        # Add anchor emphasis keywords
+        s = re.sub(r'(Breaking|Update|Alert|Special|Information|मुख्य|ताज़ा|ब्रेकिंग|विशेष|सूचना)', r'\1 ..', s, flags=re.I)
         processed.append(s)
     return " . ".join(processed)
 
@@ -47,13 +41,13 @@ def index():
 @app.route("/preview", methods=["POST"])
 def preview():
     try:
-        text = request.form.get("text", "").strip()
-        voice = request.form.get("voice", "hi_female_normal")
+        text = request.form.get("text","").strip()
+        voice = request.form.get("voice","hi_female_normal")
         if not text:
-            return jsonify({"error": "Please enter text."}), 400
+            return jsonify({"error":"Please enter some text."}),400
 
-        processed_text = process_text_for_anchor(text)
-        voice_settings = VOICES.get(voice, {"lang": "hi", "slow": False})
+        voice_settings = VOICES.get(voice, {"lang":"hi","slow":False})
+        processed_text = process_text_for_anchor(html.unescape(text))
 
         tts_fp = BytesIO()
         tts = gTTS(text=processed_text, lang=voice_settings["lang"], slow=voice_settings["slow"])
@@ -62,32 +56,29 @@ def preview():
 
         return send_file(tts_fp, mimetype="audio/mpeg")
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error":str(e)}),500
 
 @app.route("/convert", methods=["POST"])
 def convert():
     try:
-        text = request.form.get("text", "").strip()
-        voice = request.form.get("voice", "hi_female_normal")
+        text = request.form.get("text","").strip()
+        voice = request.form.get("voice","hi_female_normal")
         if not text:
-            return "Error: Please enter text.", 400
+            return "Error: Please enter some text.",400
 
-        processed_text = process_text_for_anchor(text)
-        voice_settings = VOICES.get(voice, {"lang": "hi", "slow": False})
+        voice_settings = VOICES.get(voice, {"lang":"hi","slow":False})
+        processed_text = process_text_for_anchor(html.unescape(text))
 
         tts_fp = BytesIO()
         tts = gTTS(text=processed_text, lang=voice_settings["lang"], slow=voice_settings["slow"])
         tts.write_to_fp(tts_fp)
         tts_fp.seek(0)
 
-        return send_file(
-            tts_fp,
-            mimetype="audio/mpeg",
-            as_attachment=True,
-            download_name="Hindi_News_Anchor.mp3"
-        )
+        return send_file(tts_fp, mimetype="audio/mpeg",
+                         as_attachment=True,
+                         download_name="news_anchor.mp3")
     except Exception as e:
-        return f"Error: {str(e)}", 500
+        return f"Error: {str(e)}",500
 
-if __name__ == "__main__":
+if __name__=="__main__":
     app.run(debug=True)
