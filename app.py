@@ -1,15 +1,10 @@
 from flask import Flask, render_template, request, send_file, jsonify
 from gtts import gTTS
-from pydub import AudioSegment, effects
 from io import BytesIO
 import html
 import re
-import os
 
 app = Flask(__name__)
-
-# Background studio audio (looped)
-BACKGROUND_AUDIO = "static/studio_bg.mp3"
 
 # Multi-voice mapping
 VOICES = {
@@ -36,31 +31,6 @@ def process_text_for_anchor(text):
         processed.append(s)
     return " . ".join(processed)
 
-def apply_studio_effects(tts_audio_fp):
-    """
-    Normalize, apply simple echo/reverb, and overlay background
-    """
-    try:
-        tts_audio = AudioSegment.from_file(tts_audio_fp, format="mp3")
-        tts_audio = effects.normalize(tts_audio)
-        # Simulated echo: overlay delayed copy at low volume
-        echo = tts_audio - 12
-        echo = echo.fade_in(50).fade_out(50)
-        combined = tts_audio.overlay(echo, delay=100)
-        # Add background if exists
-        if os.path.exists(BACKGROUND_AUDIO):
-            bg_audio = AudioSegment.from_file(BACKGROUND_AUDIO, format="mp3")
-            bg_audio = bg_audio * ((len(combined)//len(bg_audio))+1)
-            bg_audio = bg_audio[:len(combined)] - 18
-            combined = combined.overlay(bg_audio)
-        out_fp = BytesIO()
-        combined.export(out_fp, format="mp3")
-        out_fp.seek(0)
-        return out_fp
-    except Exception as e:
-        tts_audio_fp.seek(0)
-        return tts_audio_fp
-
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -81,8 +51,7 @@ def preview():
         tts.write_to_fp(tts_fp)
         tts_fp.seek(0)
 
-        final_audio = apply_studio_effects(tts_fp)
-        return send_file(final_audio, mimetype="audio/mpeg")
+        return send_file(tts_fp, mimetype="audio/mpeg")
     except Exception as e:
         return jsonify({"error":str(e)}),500
 
@@ -102,8 +71,7 @@ def convert():
         tts.write_to_fp(tts_fp)
         tts_fp.seek(0)
 
-        final_audio = apply_studio_effects(tts_fp)
-        return send_file(final_audio, mimetype="audio/mpeg",
+        return send_file(tts_fp, mimetype="audio/mpeg",
                          as_attachment=True,
                          download_name="ultimate_tv_news_anchor.mp3")
     except Exception as e:
