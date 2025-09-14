@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,7 +25,7 @@ button:hover{background:darkgreen;}
 <h1>Hindi News Anchor Software developed by Khabar face2face</h1>
 
 <form id="ttsForm" method="POST" action="/convert">
-<textarea name="text" placeholder="Please type here..."></textarea><br>
+<textarea name="text" placeholder="Type your text here..."></textarea><br>
 
 <label>Voice Style:</label>
 <select name="voice" id="voiceSelect">
@@ -53,7 +53,7 @@ button:hover{background:darkgreen;}
 <div id="progressBarContainer">
 <div id="progressBar"></div>
 </div>
-<div id="countdown">   ...</div>
+<div id="countdown"> Please wait...</div>
 
 <audio controls class="audioPreview" id="audioPreview"></audio>
 
@@ -106,24 +106,25 @@ document.getElementById("voiceSelect").addEventListener("change", ()=>{
 speedSlider.oninput = pitchSlider.oninput = volumeSlider.oninput = updateSliderLabels;
 updateSliderLabels();
 
-// Clean text function to remove ? before sending to server
-function cleanText(text){
-    return text.replace(/\?/g,''); // Remove all ?
+// Clean text function: remove punctuation for reading but keep modulation info
+function cleanTextForSpeech(text){
+    return text.replace(/[!?]/g,'').trim(); // Punctuation removed from speech
 }
 
 // Form submit (MP3 download)
 form.addEventListener("submit",function(e){
 progressContainer.style.display="block";countdown.style.display="block";progressBar.style.width="0%";
 let width=0;let timeLeft=5;
-countdown.innerText=`   ... ${timeLeft}s`;
+countdown.innerText=` Please wait... ${timeLeft}s`;
 let interval=setInterval(()=>{if(width>=100)clearInterval(interval);else width+=2;progressBar.style.width=width+"%";},50);
-let countdownInterval=setInterval(()=>{if(timeLeft<=0)clearInterval(countdownInterval);else countdown.innerText=`   ... ${timeLeft}s`;timeLeft--;},1000);
+let countdownInterval=setInterval(()=>{if(timeLeft<=0)clearInterval(countdownInterval);else countdown.innerText=` Please wait... ${timeLeft}s`;timeLeft--;},1000);
 });
 
 // Live preview
 async function triggerPreview(){
-const text=cleanText(form.text.value.trim());
-if(!text){audioPreview.style.display="none";return;}
+const rawText=form.text.value.trim();
+if(!rawText){audioPreview.style.display="none";return;}
+const text=cleanTextForSpeech(rawText);
 const voice=document.getElementById("voiceSelect").value;
 progressContainer.style.display="block";countdown.style.display="block";progressBar.style.width="0%";audioPreview.style.display="none";
 let width=0;let timeLeft=3;
@@ -135,7 +136,7 @@ const formData=new FormData();formData.append("text",text);formData.append("voic
 const resp=await fetch("/preview",{method:"POST",body:formData});
 if(!resp.ok)throw new Error("Preview generation failed");
 const blob=await resp.blob();audioPreview.src=URL.createObjectURL(blob);audioPreview.style.display="block";
-}catch(err){alert(": "+err.message);}
+}catch(err){alert("Error: "+err.message);}
 finally{progressContainer.style.display="none";countdown.style.display="none";}
 }
 
