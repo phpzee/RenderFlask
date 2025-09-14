@@ -47,7 +47,7 @@ button:hover{background:darkgreen;}
 <input type="range" min="0.8" max="1.0" step="0.01" value="1.0" id="volumeSlider">
 
 <button type="submit">Convert to MP3</button>
-<button type="button" id="previewBtn"> Live Preview</button>
+<button type="button" id="previewBtn">Live Preview</button>
 </form>
 
 <div id="progressBarContainer">
@@ -76,7 +76,7 @@ const speedVal=document.getElementById("speedVal");
 const pitchVal=document.getElementById("pitchVal");
 const volumeVal=document.getElementById("volumeVal");
 
-// Professional TV anchor slider defaults
+// Slider defaults
 const VOICE_DEFAULTS = {
   "hi_female_normal": {speed:1.0, pitch:1.0, volume:1.0},
   "hi_female_slow": {speed:0.95, pitch:0.95, volume:1.0},
@@ -99,13 +99,17 @@ document.getElementById("voiceSelect").addEventListener("change", ()=>{
     pitchSlider.value = defaults.pitch;
     volumeSlider.value = defaults.volume;
     updateSliderLabels();
+    triggerPreview(); // Auto live preview on voice change
 });
 
 // Update labels on slider input
 speedSlider.oninput = pitchSlider.oninput = volumeSlider.oninput = updateSliderLabels;
-
-// Call once on page load
 updateSliderLabels();
+
+// Clean text function to remove ? before sending to server
+function cleanText(text){
+    return text.replace(/\?/g,''); // Remove all ?
+}
 
 // Form submit (MP3 download)
 form.addEventListener("submit",function(e){
@@ -117,9 +121,9 @@ let countdownInterval=setInterval(()=>{if(timeLeft<=0)clearInterval(countdownInt
 });
 
 // Live preview
-previewBtn.addEventListener("click",async function(){
-const text=form.text.value.trim();
-if(!text){alert("  ");return;}
+async function triggerPreview(){
+const text=cleanText(form.text.value.trim());
+if(!text){audioPreview.style.display="none";return;}
 const voice=document.getElementById("voiceSelect").value;
 progressContainer.style.display="block";countdown.style.display="block";progressBar.style.width="0%";audioPreview.style.display="none";
 let width=0;let timeLeft=3;
@@ -133,7 +137,10 @@ if(!resp.ok)throw new Error("Preview generation failed");
 const blob=await resp.blob();audioPreview.src=URL.createObjectURL(blob);audioPreview.style.display="block";
 }catch(err){alert(": "+err.message);}
 finally{progressContainer.style.display="none";countdown.style.display="none";}
-});
+}
+
+// Preview button
+previewBtn.addEventListener("click", triggerPreview);
 </script>
 </body>
 </html>
