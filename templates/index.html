@@ -1,39 +1,82 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ultimate TTS Anchor</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #e6ffe6; color: #333; text-align: center; }
-    .container { max-width: 600px; margin: 50px auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
-    textarea { width: 100%; height: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
-    button { margin-top: 15px; padding: 10px 20px; font-size: 16px; background: green; color: white; border: none; border-radius: 8px; cursor: pointer; }
-    button:hover { background: darkgreen; }
-    #progress { margin-top: 15px; display: none; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultimate TV Broadcast Hindi News Anchor TTS</title>
+<style>
+body{font-family:Arial,sans-serif;background:#e6ffe6;margin:0;padding:0;}
+.container{max-width:720px;margin:30px auto;background:#fff;padding:25px;border-radius:15px;box-shadow:0 12px 28px rgba(0,0,0,0.25);}
+h2{text-align:center;color:green;margin-bottom:20px;}
+textarea{width:100%;height:180px;padding:12px;border-radius:12px;border:1px solid #ccc;resize:none;font-size:16px;}
+select{width:100%;margin-top:15px;padding:12px;border-radius:12px;font-size:16px;}
+button{margin-top:15px;padding:12px;font-size:16px;background:green;color:white;border:none;border-radius:12px;cursor:pointer;width:100%;}
+button:hover{background:darkgreen;}
+#progressBarContainer{margin-top:15px;width:100%;background:#ddd;border-radius:12px;display:none;}
+#progressBar{width:0%;height:22px;background:green;border-radius:12px;transition:width 0.2s;}
+#countdown{margin-top:10px;font-weight:bold;color:darkgreen;display:none;text-align:center;}
+.audioPreview{margin-top:15px;display:none;width:100%;}
+.footer{margin-top:25px;font-size:0.9em;color:#555;text-align:center;}
+</style>
 </head>
 <body>
-  <div class="container">
-    <h2>🌿 Ultimate TTS News Anchor 🌿</h2>
-    <form id="ttsForm" method="POST" action="/convert">
-      <textarea name="text" placeholder="Enter your text here..."></textarea><br>
-      <select name="lang">
-        <option value="hi">Hindi</option>
-        <option value="ur">Urdu</option>
-        <option value="en">English</option>
-        <option value="mr">Marathi</option>
-      </select>
-      <br>
-      <button type="submit">Convert to MP3</button>
-    </form>
-    <div id="progress">⏳ Processing... please wait</div>
-  </div>
+<div class="container">
+<h2>🎙️ Ultimate TV Broadcast Hindi News Anchor TTS</h2>
+<form id="ttsForm" method="POST" action="/convert">
+<textarea name="text" placeholder="अपना टेक्स्ट यहाँ लिखें..."></textarea><br>
+<select name="voice">
+<option value="hi_female_normal">हिंदी - Female (Normal)</option>
+<option value="hi_female_slow">हिंदी - Female (Slow/Deep)</option>
+<option value="hi_male_normal">हिंदी - Male (Normal)</option>
+<option value="hi_male_slow">हिंदी - Male (Slow/Deep)</option>
+</select><br>
+<button type="submit">MP3 में बदलें</button>
+<button type="button" id="previewBtn">🎧 Live Preview</button>
+</form>
 
-  <script>
-    document.getElementById("ttsForm").addEventListener("submit", function() {
-      document.getElementById("progress").style.display = "block";
-    });
-  </script>
+<div id="progressBarContainer">
+<div id="progressBar"></div>
+</div>
+<div id="countdown">⏳ कृपया प्रतीक्षा करें...</div>
+
+<audio controls class="audioPreview" id="audioPreview"></audio>
+
+<div class="footer">© 2025 Zeeshan Azmi | Ultimate TV Broadcast Hindi News Anchor</div>
+</div>
+
+<script>
+const form=document.getElementById("ttsForm");
+const progressContainer=document.getElementById("progressBarContainer");
+const progressBar=document.getElementById("progressBar");
+const countdown=document.getElementById("countdown");
+const previewBtn=document.getElementById("previewBtn");
+const audioPreview=document.getElementById("audioPreview");
+
+form.addEventListener("submit",function(e){
+progressContainer.style.display="block";countdown.style.display="block";progressBar.style.width="0%";
+let width=0;let timeLeft=5;
+countdown.innerText=`⏳ कृपया प्रतीक्षा करें... ${timeLeft}s`;
+let interval=setInterval(()=>{if(width>=100)clearInterval(interval);else width+=2;progressBar.style.width=width+"%";},50);
+let countdownInterval=setInterval(()=>{if(timeLeft<=0)clearInterval(countdownInterval);else countdown.innerText=`⏳ कृपया प्रतीक्षा करें... ${timeLeft}s`;timeLeft--;},1000);
+});
+
+previewBtn.addEventListener("click",async function(){
+const text=form.text.value.trim();
+if(!text){alert("कृपया टेक्स्ट डालें।");return;}
+const voice=form.voice.value;
+progressContainer.style.display="block";countdown.style.display="block";progressBar.style.width="0%";audioPreview.style.display="none";
+let width=0;let timeLeft=3;
+countdown.innerText=`⏳ Generating preview... ${timeLeft}s`;
+let interval=setInterval(()=>{if(width>=100)clearInterval(interval);else width+=3;progressBar.style.width=width+"%";},50);
+let countdownInterval=setInterval(()=>{if(timeLeft<=0)clearInterval(countdownInterval);else countdown.innerText=`⏳ Generating preview... ${timeLeft}s`;timeLeft--;},1000);
+try{
+const formData=new FormData();formData.append("text",text);formData.append("voice",voice);
+const resp=await fetch("/preview",{method:"POST",body:formData});
+if(!resp.ok)throw new Error("Preview generation failed");
+const blob=await resp.blob();audioPreview.src=URL.createObjectURL(blob);audioPreview.style.display="block";
+}catch(err){alert("त्रुटि: "+err.message);}
+finally{progressContainer.style.display="none";countdown.style.display="none";}
+});
+</script>
 </body>
 </html>
