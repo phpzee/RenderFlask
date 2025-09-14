@@ -25,7 +25,7 @@ button:hover{background:darkgreen;}
 <h1>Hindi News Anchor Software developed by Khabar face2face</h1>
 
 <form id="ttsForm" method="POST" action="/convert">
-<textarea name="text" placeholder="   ..."></textarea><br>
+<textarea name="text" placeholder="Please type here..."></textarea><br>
 
 <label>Voice Style:</label>
 <select name="voice" id="voiceSelect">
@@ -47,7 +47,7 @@ button:hover{background:darkgreen;}
 <input type="range" min="0.8" max="1.0" step="0.01" value="1.0" id="volumeSlider">
 
 <button type="submit">Convert to MP3</button>
-<button type="button" id="previewBtn"> Live Preview</button>
+<button type="button" id="previewBtn"> Live Preview</button>
 </form>
 
 <div id="progressBarContainer">
@@ -123,7 +123,7 @@ if(!text){alert("  ");return;}
 const voice=document.getElementById("voiceSelect").value;
 progressContainer.style.display="block";countdown.style.display="block";progressBar.style.width="0%";audioPreview.style.display="none";
 let width=0;let timeLeft=3;
-countdown.innerText=` Generating preview... ${timeLeft}s`;
+countdown.innerText=`Generating preview... ${timeLeft}s`;
 let interval=setInterval(()=>{if(width>=100)clearInterval(interval);else width+=3;progressBar.style.width=width+"%";},50);
 let countdownInterval=setInterval(()=>{if(timeLeft<=0)clearInterval(countdownInterval);else countdown.innerText=` Generating preview... ${timeLeft}s`;timeLeft--;},1000);
 try{
