@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ultimate TV Female Hindi News Anchor TTS</title>
+<title>Ultimate TV Broadcast Hindi News Anchor TTS</title>
 <style>
 body{font-family:Arial,sans-serif;background:#e6ffe6;margin:0;padding:0;}
 .container{max-width:720px;margin:30px auto;background:#fff;padding:25px;border-radius:15px;box-shadow:0 12px 28px rgba(0,0,0,0.25);}
 h2{text-align:center;color:green;margin-bottom:20px;}
-textarea{width:100%;height:180px;padding:12px;border-radius:12px;border:1px solid #ccc;resize:none;font-size:16px;margin-bottom:12px;}
-select, input[type=range]{width:100%;margin-top:12px;padding:8px;border-radius:12px;font-size:16px;}
+textarea{width:100%;height:180px;padding:12px;border-radius:12px;border:1px solid #ccc;resize:none;font-size:16px;}
+label{display:block;margin-top:10px;font-weight:bold;}
+select,input[type=range]{width:100%;margin-top:5px;padding:8px;border-radius:12px;font-size:16px;}
 button{margin-top:15px;padding:12px;font-size:16px;background:green;color:white;border:none;border-radius:12px;cursor:pointer;width:100%;}
 button:hover{background:darkgreen;}
 #progressBarContainer{margin-top:15px;width:100%;background:#ddd;border-radius:12px;display:none;}
@@ -21,36 +22,54 @@ button:hover{background:darkgreen;}
 </head>
 <body>
 <div class="container">
-<h2>🎙️ Ultimate TV Female Hindi News Anchor TTS</h2>
+<h2> Ultimate TV Broadcast Hindi News Anchor TTS</h2>
+<p>Welcome to Zeeshan Azmi Hindi News Anchor TTS. Select voice style and adjust pitch, speed & volume.</p>
+
 <form id="ttsForm" method="POST" action="/convert">
-<textarea name="text" placeholder="अपना टेक्स्ट यहाँ लिखें..."></textarea><br>
+<textarea name="text" placeholder="   ..."></textarea><br>
 
-<select name="voice">
-<option value="hi_female_normal">हिंदी - Female (Normal)</option>
-<option value="hi_female_slow">हिंदी - Female (Slow/Deep)</option>
-</select>
+<div>
+<label>Voice Style:</label>
+<input type="radio" id="normalVoice" name="voice" value="hi_female_normal" checked>
+<label for="normalVoice">Normal Female (TV Anchor)</label>
 
-<label>Speed: <span id="speedVal">1</span>x</label>
-<input type="range" min="0.5" max="2" step="0.1" value="1" id="speedSlider">
+<input type="radio" id="slowVoice" name="voice" value="hi_female_slow">
+<label for="slowVoice">Slow/Deep Female (Serious/Breaking)</label>
 
-<label>Volume: <span id="volumeVal">1</span>x</label>
-<input type="range" min="0" max="2" step="0.1" value="1" id="volumeSlider">
+<input type="radio" id="cheerfulVoice" name="voice" value="hi_female_cheerful">
+<label for="cheerfulVoice">Cheerful Female (Entertainment)</label>
 
-<label>Pitch: <span id="pitchVal">1</span>x</label>
-<input type="range" min="0.5" max="2" step="0.05" value="1" id="pitchSlider">
+<input type="radio" id="calmVoice" name="voice" value="hi_female_calm">
+<label for="calmVoice">Calm Female (Weather/Commentary)</label>
 
-<button type="submit">MP3 में बदलें</button>
-<button type="button" id="previewBtn">🎧 Live Preview</button>
+<input type="radio" id="urgentVoice" name="voice" value="hi_female_urgent">
+<label for="urgentVoice">Urgent Female (Emergency News)</label>
+
+<input type="radio" id="softVoice" name="voice" value="hi_female_soft">
+<label for="softVoice">Soft Female (Feature Stories)</label>
+</div>
+
+<label>Speed: <span id="speedVal">1.0</span>x</label>
+<input type="range" min="0.9" max="1.2" step="0.01" value="1.0" id="speedSlider">
+
+<label>Pitch: <span id="pitchVal">1.0</span>x</label>
+<input type="range" min="0.9" max="1.2" step="0.01" value="1.0" id="pitchSlider">
+
+<label>Volume: <span id="volumeVal">1.0</span>x</label>
+<input type="range" min="0.8" max="1.0" step="0.01" value="1.0" id="volumeSlider">
+
+<button type="submit">MP3  </button>
+<button type="button" id="previewBtn"> Live Preview</button>
 </form>
 
 <div id="progressBarContainer">
 <div id="progressBar"></div>
 </div>
-<div id="countdown">⏳ कृपया प्रतीक्षा करें...</div>
+<div id="countdown">   ...</div>
 
 <audio controls class="audioPreview" id="audioPreview"></audio>
 
-<div class="footer">© 2025 Zeeshan Azmi | Ultimate Female Hindi News Anchor</div>
+<div class="footer"> 2025 Zeeshan Azmi | Ultimate TV Broadcast Hindi News Anchor</div>
 </div>
 
 <script>
@@ -60,49 +79,74 @@ const progressBar=document.getElementById("progressBar");
 const countdown=document.getElementById("countdown");
 const previewBtn=document.getElementById("previewBtn");
 const audioPreview=document.getElementById("audioPreview");
+
+// Sliders
 const speedSlider=document.getElementById("speedSlider");
-const volumeSlider=document.getElementById("volumeSlider");
 const pitchSlider=document.getElementById("pitchSlider");
+const volumeSlider=document.getElementById("volumeSlider");
 const speedVal=document.getElementById("speedVal");
-const volumeVal=document.getElementById("volumeVal");
 const pitchVal=document.getElementById("pitchVal");
+const volumeVal=document.getElementById("volumeVal");
 
-speedSlider.addEventListener("input",()=>{speedVal.innerText=speedSlider.value; audioPreview.playbackRate=speedSlider.value;});
-volumeSlider.addEventListener("input",()=>{volumeVal.innerText=volumeSlider.value; audioPreview.volume=volumeSlider.value;});
-pitchSlider.addEventListener("input",()=>{pitchVal.innerText=pitchSlider.value; audioPreview.playbackRate=pitchSlider.value;});
+// Recommended slider values for each voice style
+const VOICE_DEFAULTS = {
+  "hi_female_normal": {speed:1.0, pitch:1.0, volume:1.0},
+  "hi_female_slow": {speed:0.95, pitch:0.95, volume:1.0},
+  "hi_female_cheerful": {speed:1.1, pitch:1.05, volume:1.0},
+  "hi_female_calm": {speed:0.95, pitch:1.0, volume:1.0},
+  "hi_female_urgent": {speed:1.15, pitch:1.0, volume:1.0},
+  "hi_female_soft": {speed:1.0, pitch:0.9, volume:0.9}
+};
 
+// Update slider labels
+function updateSliderLabels(){
+    speedVal.innerText = speedSlider.value;
+    pitchVal.innerText = pitchSlider.value;
+    volumeVal.innerText = volumeSlider.value;
+}
+
+// Auto-adjust sliders when voice changes
+document.querySelectorAll('input[name="voice"]').forEach(rb=>{
+    rb.addEventListener("change",()=>{
+        const defaults = VOICE_DEFAULTS[rb.value];
+        speedSlider.value = defaults.speed;
+        pitchSlider.value = defaults.pitch;
+        volumeSlider.value = defaults.volume;
+        updateSliderLabels();
+    });
+});
+
+// Update labels on slider input
+speedSlider.oninput = pitchSlider.oninput = volumeSlider.oninput = updateSliderLabels;
+
+// Call once on page load
+updateSliderLabels();
+
+// Form submit (MP3 download)
 form.addEventListener("submit",function(e){
 progressContainer.style.display="block";countdown.style.display="block";progressBar.style.width="0%";
 let width=0;let timeLeft=5;
-countdown.innerText=`⏳ कृपया प्रतीक्षा करें... ${timeLeft}s`;
+countdown.innerText=`   ... ${timeLeft}s`;
 let interval=setInterval(()=>{if(width>=100)clearInterval(interval);else width+=2;progressBar.style.width=width+"%";},50);
-let countdownInterval=setInterval(()=>{if(timeLeft<=0)clearInterval(countdownInterval);else countdown.innerText=`⏳ कृपया प्रतीक्षा करें... ${timeLeft}s`;timeLeft--;},1000);
+let countdownInterval=setInterval(()=>{if(timeLeft<=0)clearInterval(countdownInterval);else countdown.innerText=`   ... ${timeLeft}s`;timeLeft--;},1000);
 });
 
+// Live preview
 previewBtn.addEventListener("click",async function(){
 const text=form.text.value.trim();
-if(!text){alert("कृपया टेक्स्ट डालें।");return;}
-const voice=form.voice.value;
-const speed=speedSlider.value;
-const pitch=pitchSlider.value;
-const volume=volumeSlider.value;
-
+if(!text){alert("  ");return;}
+const voice=document.querySelector('input[name="voice"]:checked').value;
 progressContainer.style.display="block";countdown.style.display="block";progressBar.style.width="0%";audioPreview.style.display="none";
 let width=0;let timeLeft=3;
-countdown.innerText=`⏳ Generating preview... ${timeLeft}s`;
+countdown.innerText=` Generating preview... ${timeLeft}s`;
 let interval=setInterval(()=>{if(width>=100)clearInterval(interval);else width+=3;progressBar.style.width=width+"%";},50);
-let countdownInterval=setInterval(()=>{if(timeLeft<=0)clearInterval(countdownInterval);else countdown.innerText=`⏳ Generating preview... ${timeLeft}s`;timeLeft--;},1000);
-
+let countdownInterval=setInterval(()=>{if(timeLeft<=0)clearInterval(countdownInterval);else countdown.innerText=` Generating preview... ${timeLeft}s`;timeLeft--;},1000);
 try{
 const formData=new FormData();formData.append("text",text);formData.append("voice",voice);
 const resp=await fetch("/preview",{method:"POST",body:formData});
 if(!resp.ok)throw new Error("Preview generation failed");
-const blob=await resp.blob();
-audioPreview.src=URL.createObjectURL(blob);
-audioPreview.playbackRate=pitch; // pitch slider effect
-audioPreview.volume=volume; // volume slider
-audioPreview.style.display="block";
-}catch(err){alert("त्रुटि: "+err.message);}
+const blob=await resp.blob();audioPreview.src=URL.createObjectURL(blob);audioPreview.style.display="block";
+}catch(err){alert(": "+err.message);}
 finally{progressContainer.style.display="none";countdown.style.display="none";}
 });
 </script>
