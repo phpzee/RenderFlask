@@ -1,17 +1,23 @@
 from flask import Flask, render_template, request, send_file, jsonify
 from gtts import gTTS
 from io import BytesIO
-import html, re
+import html
+import re
 
 app = Flask(__name__)
 
-# Female voices only
+# Female-only voice mapping (multi-style)
 VOICES = {
     "hi_female_normal": {"lang":"hi","slow":False},
-    "hi_female_slow": {"lang":"hi","slow":True}
+    "hi_female_slow": {"lang":"hi","slow":True},
+    "hi_female_cheerful": {"lang":"hi","slow":False},
+    "hi_female_calm": {"lang":"hi","slow":False},
+    "hi_female_urgent": {"lang":"hi","slow":False},
+    "hi_female_soft": {"lang":"hi","slow":False}
 }
 
 def process_text_for_anchor(text):
+    """Anchor-style emphasis, sentence-wise modulation"""
     text = text.strip()
     if not text:
         return ""
@@ -22,6 +28,7 @@ def process_text_for_anchor(text):
         s = s.strip()
         if not s:
             continue
+        # Emphasize keywords
         s = re.sub(r'(मुख्य|ताज़ा|ब्रेकिंग|विशेष|सूचना)', r'\1 ..', s)
         processed.append(s)
     return " . ".join(processed)
@@ -68,7 +75,7 @@ def convert():
 
         return send_file(tts_fp, mimetype="audio/mpeg",
                          as_attachment=True,
-                         download_name="ultimate_female_news_anchor.mp3")
+                         download_name="ultimate_tv_news_anchor.mp3")
     except Exception as e:
         return f"त्रुटि: {str(e)}",500
 
