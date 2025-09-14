@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,23 +11,23 @@ h1{text-align:center;color:green;font-size:1.3em;margin-bottom:20px;}
 textarea{width:100%;height:180px;padding:12px;border-radius:12px;border:1px solid #ccc;resize:none;font-size:16px;}
 label{display:block;margin-top:10px;font-weight:bold;}
 select,input[type=range]{width:100%;margin-top:5px;padding:8px;border-radius:12px;font-size:16px;}
-button{margin-top:15px;padding:12px;font-size:16px;background:green;color:white;border:none;border-radius:12px;cursor:pointer;width:100%;}
+button{margin-top:15px;padding:12px;font-size:16px;background:green;color:white;border:none;border-radius:12px;cursor:pointer;width:32%;margin-right:2%;}
 button:hover{background:darkgreen;}
 #progressBarContainer{margin-top:15px;width:100%;background:#ddd;border-radius:12px;display:none;}
 #progressBar{width:0%;height:22px;background:green;border-radius:12px;transition:width 0.2s;}
 #countdown{margin-top:10px;font-weight:bold;color:darkgreen;display:none;text-align:center;}
 .audioPreview{margin-top:15px;display:none;width:100%;}
+.highlight{background:yellow;}
 .footer{margin-top:25px;font-size:0.9em;color:#555;text-align:center;}
-.controls label{margin-top:10px;}
+button:last-child{margin-right:0;}
 </style>
 </head>
 <body>
 <div class="container">
 <h1>Hindi News Anchor Software developed by Khabar face2face</h1>
 
-<!-- =================== MP3 Download TTS =================== -->
 <form id="ttsForm" method="POST" action="/convert">
-<textarea name="text" placeholder="Please type here..."></textarea><br>
+<textarea name="text" placeholder="Type your text here..."></textarea><br>
 
 <label>Voice Style:</label>
 <select name="voice" id="voiceSelect">
@@ -48,8 +48,11 @@ button:hover{background:darkgreen;}
 <label>Volume: <span id="volumeVal">1.0</span>x</label>
 <input type="range" min="0.8" max="1.0" step="0.01" value="1.0" id="volumeSlider">
 
+<div style="display:flex;justify-content:space-between;">
 <button type="submit">Convert to MP3</button>
 <button type="button" id="previewBtn">Live Preview</button>
+<button type="button" id="speakBtn">Speak Text</button>
+</div>
 </form>
 
 <div id="progressBarContainer">
@@ -58,45 +61,19 @@ button:hover{background:darkgreen;}
 <div id="countdown">⏳ Please wait...</div>
 
 <audio controls class="audioPreview" id="audioPreview"></audio>
-</div>
-
-<!-- =================== Interactive Live Hindi News Anchor =================== -->
-<div class="container" style="margin-top:40px;">
-<h2 style="text-align:center; color:green; font-size:1.2em; margin-bottom:20px;">
-Interactive Live Hindi News Anchor (Client-Side)
-</h2>
-
-<textarea id="liveTextInput" placeholder="Type your article here..."></textarea>
-
-<div class="controls">
-<label>Pitch: <span id="livePitchVal">1.0</span></label>
-<input type="range" id="livePitchSlider" min="0.8" max="1.2" step="0.01" value="1.0">
-
-<label>Rate: <span id="liveRateVal">1.0</span></label>
-<input type="range" id="liveRateSlider" min="0.8" max="1.2" step="0.01" value="1.0">
-
-<label>Volume: <span id="liveVolumeVal">1.0</span></label>
-<input type="range" id="liveVolumeSlider" min="0.5" max="1.0" step="0.01" value="1.0">
-</div>
-
-<button id="liveSpeakBtn">Speak From Cursor</button>
-<p style="font-size:0.9em; color:#555; margin-top:10px;">
-Note: Commas will add a short pause. Multiple spaces are ignored. Punctuation like । ! ? will not be read.
-</p>
-</div>
 
 <div class="footer">© 2025 Zeeshan Azmi | Hindi News Anchor</div>
+</div>
 
 <script>
-// --- MP3 Download Section ---
 const form=document.getElementById("ttsForm");
 const progressContainer=document.getElementById("progressBarContainer");
 const progressBar=document.getElementById("progressBar");
 const countdown=document.getElementById("countdown");
 const previewBtn=document.getElementById("previewBtn");
 const audioPreview=document.getElementById("audioPreview");
+const speakBtn=document.getElementById("speakBtn");
 
-// Sliders
 const speedSlider=document.getElementById("speedSlider");
 const pitchSlider=document.getElementById("pitchSlider");
 const volumeSlider=document.getElementById("volumeSlider");
@@ -104,7 +81,6 @@ const speedVal=document.getElementById("speedVal");
 const pitchVal=document.getElementById("pitchVal");
 const volumeVal=document.getElementById("volumeVal");
 
-// Voice defaults
 const VOICE_DEFAULTS = {
   "hi_female_normal": {speed:1.0, pitch:1.0, volume:1.0},
   "hi_female_slow": {speed:0.95, pitch:0.95, volume:1.0},
@@ -120,7 +96,6 @@ function updateSliderLabels(){
     volumeVal.innerText = volumeSlider.value;
 }
 
-// Adjust sliders on voice change
 document.getElementById("voiceSelect").addEventListener("change", ()=>{
     const defaults = VOICE_DEFAULTS[document.getElementById("voiceSelect").value];
     speedSlider.value = defaults.speed;
@@ -132,7 +107,7 @@ document.getElementById("voiceSelect").addEventListener("change", ()=>{
 speedSlider.oninput = pitchSlider.oninput = volumeSlider.oninput = updateSliderLabels;
 updateSliderLabels();
 
-// Form submit
+// MP3 Download
 form.addEventListener("submit",function(e){
 progressContainer.style.display="block";countdown.style.display="block";progressBar.style.width="0%";
 let width=0;let timeLeft=5;
@@ -141,7 +116,7 @@ let interval=setInterval(()=>{if(width>=100)clearInterval(interval);else width+=
 let countdownInterval=setInterval(()=>{if(timeLeft<=0)clearInterval(countdownInterval);else countdown.innerText=`⏳ Please wait... ${timeLeft}s`;timeLeft--;},1000);
 });
 
-// Live preview
+// Live Preview
 previewBtn.addEventListener("click",async function(){
 const text=form.text.value.trim();
 if(!text){alert("Please enter text.");return;}
@@ -160,92 +135,33 @@ const blob=await resp.blob();audioPreview.src=URL.createObjectURL(blob);audioPre
 finally{progressContainer.style.display="none";countdown.style.display="none";}
 });
 
-// --- Interactive Live TTS Section ---
-const liveTextInput = document.getElementById("liveTextInput");
-const liveSpeakBtn = document.getElementById("liveSpeakBtn");
-const livePitchSlider = document.getElementById("livePitchSlider");
-const liveRateSlider = document.getElementById("liveRateSlider");
-const liveVolumeSlider = document.getElementById("liveVolumeSlider");
-const livePitchVal = document.getElementById("livePitchVal");
-const liveRateVal = document.getElementById("liveRateVal");
-const liveVolumeVal = document.getElementById("liveVolumeVal");
+// Speak button with word highlighting
+speakBtn.addEventListener("click", function(){
+const utter = new SpeechSynthesisUtterance();
+let rawText = form.text.value.trim();
+if(!rawText){alert("Please enter text."); return;}
+// Remove punctuation except commas for pause
+rawText = rawText.replace(/[।!?:;"“”]/g,'');
+let words = rawText.split(/\s+/);
+let currentWordIndex = 0;
 
-function updateLiveLabels(){
-    livePitchVal.innerText = livePitchSlider.value;
-    liveRateVal.innerText = liveRateSlider.value;
-    liveVolumeVal.innerText = liveVolumeSlider.value;
+function speakNext(){
+  if(currentWordIndex >= words.length){
+    form.text.innerHTML = rawText;
+    return;
+  }
+  let word = words[currentWordIndex];
+  form.text.value = words.map((w,i)=>i===currentWordIndex?`>>${w}<<`:w).join(' ');
+  utter.text = word + (word.endsWith(',') ? ',' : '');
+  utter.lang = 'hi-IN';
+  utter.rate = parseFloat(speedSlider.value);
+  utter.pitch = parseFloat(pitchSlider.value);
+  utter.volume = parseFloat(volumeSlider.value);
+  utter.onend = function(){currentWordIndex++; speakNext();}
+  speechSynthesis.speak(utter);
 }
-livePitchSlider.oninput = liveRateSlider.oninput = liveVolumeSlider.oninput = updateLiveLabels;
-updateLiveLabels();
-
-// Split text into words ignoring extra spaces
-function splitWords(text){
-    text = text.replace(/\s+/g,' '); 
-    return text.match(/[^ ,]+|[,]/g) || [];
-}
-
-// Speak from cursor
-function liveSpeakFromCursor(){
-    const selStart = liveTextInput.selectionStart;
-    const fullText = liveTextInput.value;
-    let words = splitWords(fullText);
-
-    let charCount = 0;
-    let startIdx = 0;
-    for(let i=0;i<words.length;i++){
-        if(charCount + words[i].length >= selStart){
-            startIdx = i;
-            break;
-        }
-        charCount += words[i].length + 1;
-    }
-
-    window.speechSynthesis.cancel();
-
-    function speakWord(idx){
-        if(idx >= words.length) return;
-        let word = words[idx];
-        if(word === ','){
-            setTimeout(()=>speakWord(idx+1), 300);
-            charCount += 1;
-            return;
-        }
-
-        // Skip other punctuations
-        if(/[।!?]/.test(word)){
-            charCount += word.length;
-            speakWord(idx+1);
-            return;
-        }
-
-        const utter = new SpeechSynthesisUtterance(word);
-        utter.lang = "hi-IN";
-        utter.pitch = parseFloat(livePitchSlider.value);
-        utter.rate = parseFloat(liveRateSlider.value);
-        utter.volume = parseFloat(liveVolumeSlider.value);
-
-        utter.onstart = ()=>{
-            const before = words.slice(0,idx).join(' ');
-            const after = words.slice(idx+1).join(' ');
-            liveTextInput.value = before + ' ' + word + ' ' + after;
-            liveTextInput.focus();
-            liveTextInput.setSelectionRange(charCount,charCount+word.length);
-        };
-
-        utter.onend = ()=>{
-            charCount += word.length + 1;
-            speakWord(idx+1);
-        };
-
-        window.speechSynthesis.speak(utter);
-    }
-
-    speakWord(startIdx);
-}
-
-liveSpeakBtn.onclick = liveSpeakFromCursor;
+speakNext();
+});
 </script>
 </body>
 </html>
-
-
