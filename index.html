@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hindi News Anchor TTS</title>
+<style>
+body{font-family:Arial,sans-serif;background:#e6ffe6;margin:0;padding:0;}
+.container{max-width:720px;margin:30px auto;background:#fff;padding:25px;border-radius:15px;box-shadow:0 12px 28px rgba(0,0,0,0.25);}
+h1{text-align:center;color:green;font-size:1.3em;margin-bottom:20px;}
+textarea{width:100%;height:180px;padding:12px;border-radius:12px;border:1px solid #ccc;resize:none;font-size:16px;}
+label{display:block;margin-top:10px;font-weight:bold;}
+select,input[type=range]{width:100%;margin-top:5px;padding:8px;border-radius:12px;font-size:16px;}
+button{margin-top:15px;padding:12px;font-size:16px;background:green;color:white;border:none;border-radius:12px;cursor:pointer;width:100%;}
+button:hover{background:darkgreen;}
+#progressBarContainer{margin-top:15px;width:100%;background:#ddd;border-radius:12px;display:none;}
+#progressBar{width:0%;height:22px;background:green;border-radius:12px;transition:width 0.2s;}
+#countdown{margin-top:10px;font-weight:bold;color:darkgreen;display:none;text-align:center;}
+.audioPreview{margin-top:15px;display:none;width:100%;}
+.footer{margin-top:25px;font-size:0.9em;color:#555;text-align:center;}
+.controls label{margin-top:10px;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Hindi News Anchor Software developed by Khabar face2face</h1>
+
+<form id="ttsForm" method="POST" action="/convert">
+<textarea name="text" placeholder="Please type here..."></textarea><br>
+
+<label>Voice Style:</label>
+<select name="voice" id="voiceSelect">
+<option value="hi_female_normal">Normal Female (Standard TV Anchor)</option>
+<option value="hi_female_slow">Slow/Deep Female (Serious/Breaking News)</option>
+<option value="hi_female_cheerful">Cheerful Female (Entertainment/Showbiz)</option>
+<option value="hi_female_calm">Calm Female (Weather/Feature Stories)</option>
+<option value="hi_female_urgent">Urgent Female (Emergency News)</option>
+<option value="hi_female_soft">Soft Female (Feature/Interview)</option>
+</select>
+
+<label>Speed: <span id="speedVal">1.0</span>x</label>
+<input type="range" min="0.9" max="1.2" step="0.01" value="1.0" id="speedSlider" name="speed">
+
+<label>Pitch: <span id="pitchVal">1.0</span>x</label>
+<input type="range" min="0.9" max="1.2" step="0.01" value="1.0" id="pitchSlider" name="pitch">
+
+<label>Volume: <span id="volumeVal">1.0</span>x</label>
+<input type="range" min="0.8" max="1.0" step="0.01" value="1.0" id="volumeSlider" name="volume">
+
+<button type="submit">Convert to MP3</button>
+<button type="button" id="previewBtn">Live Preview</button>
+</form>
+
+<div id="progressBarContainer">
+<div id="progressBar"></div>
+</div>
+<div id="countdown">⏳ Please wait...</div>
+
+<audio controls class="audioPreview" id="audioPreview"></audio>
+</div>
+
+<div class="footer">© 2025 Zeeshan Azmi | Hindi News Anchor</div>
+
+<script>
+// --- MP3 Download Section ---
+const form=document.getElementById("ttsForm");
+const progressContainer=document.getElementById("progressBarContainer");
+const progressBar=document.getElementById("progressBar");
+const countdown=document.getElementById("countdown");
+const previewBtn=document.getElementById("previewBtn");
+const audioPreview=document.getElementById("audioPreview");
+
+// Sliders
+const speedSlider=document.getElementById("speedSlider");
+const pitchSlider=document.getElementById("pitchSlider");
+const volumeSlider=document.getElementById("volumeSlider");
+const speedVal=document.getElementById("speedVal");
+const pitchVal=document.getElementById("pitchVal");
+const volumeVal=document.getElementById("volumeVal");
+
+function updateSliderLabels(){
+    speedVal.innerText = speedSlider.value;
+    pitchVal.innerText = pitchSlider.value;
+    volumeVal.innerText = volumeSlider.value;
+}
+speedSlider.oninput = pitchSlider.oninput = volumeSlider.oninput = updateSliderLabels;
+updateSliderLabels();
+
+// Form submit progress bar
+form.addEventListener("submit",function(e){
+progressContainer.style.display="block";countdown.style.display="block";progressBar.style.width="0%";
+let width=0;let timeLeft=5;
+countdown.innerText=`⏳ Please wait... ${timeLeft}s`;
+let interval=setInterval(()=>{if(width>=100)clearInterval(interval);else width+=2;progressBar.style.width=width+"%";},50);
+let countdownInterval=setInterval(()=>{if(timeLeft<=0)clearInterval(countdownInterval);else countdown.innerText=`⏳ Please wait... ${timeLeft}s`;timeLeft--;},1000);
+});
+
+// Live preview
+previewBtn.addEventListener("click",async function(){
+const text=form.text.value.trim();
+if(!text){alert("Please enter text.");return;}
+const voice=document.getElementById("voiceSelect").value;
+const speed=speedSlider.value;
+const pitch=pitchSlider.value;
+const volume=volumeSlider.value;
+
+progressContainer.style.display="block";countdown.style.display="block";progressBar.style.width="0%";audioPreview.style.display="none";
+let width=0;let timeLeft=3;
+countdown.innerText=`Generating preview... ${timeLeft}s`;
+let interval=setInterval(()=>{if(width>=100)clearInterval(interval);else width+=3;progressBar.style.width=width+"%";},50);
+let countdownInterval=setInterval(()=>{if(timeLeft<=0)clearInterval(countdownInterval);else countdown.innerText=`⏳ Generating preview... ${timeLeft}s`;timeLeft--;},1000);
+
+try{
+const formData=new FormData();
+formData.append("text",text);
+formData.append("voice",voice);
+formData.append("speed",speed);
+formData.append("pitch",pitch);
+formData.append("volume",volume);
+
+const resp=await fetch("/preview",{method:"POST",body:formData});
+if(!resp.ok)throw new Error("Preview generation failed");
+const blob=await resp.blob();audioPreview.src=URL.createObjectURL(blob);audioPreview.style.display="block";
+}catch(err){alert("Error: "+err.message);}
+finally{progressContainer.style.display="none";countdown.style.display="none";}
+});
+</script>
+</body>
+</html>
