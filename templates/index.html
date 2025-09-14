@@ -7,6 +7,7 @@
 <style>
 body{font-family:Arial,sans-serif;background:#e6ffe6;margin:0;padding:0;}
 .container{max-width:720px;margin:30px auto;background:#fff;padding:25px;border-radius:15px;box-shadow:0 12px 28px rgba(0,0,0,0.25);}
+h1{text-align:center;color:green;font-size:1.3em;margin-bottom:5px;}
 h2{text-align:center;color:green;margin-bottom:20px;}
 textarea{width:100%;height:180px;padding:12px;border-radius:12px;border:1px solid #ccc;resize:none;font-size:16px;}
 label{display:block;margin-top:10px;font-weight:bold;}
@@ -22,32 +23,22 @@ button:hover{background:darkgreen;}
 </head>
 <body>
 <div class="container">
-<h2> Ultimate TV Broadcast Hindi News Anchor TTS</h2>
-<p>Welcome to Zeeshan Azmi Hindi News Anchor TTS. Select voice style and adjust pitch, speed & volume.</p>
+<h1>Hindi News Anchor Software developed by Khabar face2face</h1>
+<h2>Ultimate TV Broadcast Hindi News Anchor TTS</h2>
+<p>Welcome to Zeeshan Azmi Hindi News Anchor TTS. Select voice style and adjust pitch, speed & volume for a professional TV anchor experience.</p>
 
 <form id="ttsForm" method="POST" action="/convert">
 <textarea name="text" placeholder="   ..."></textarea><br>
 
-<div>
 <label>Voice Style:</label>
-<input type="radio" id="normalVoice" name="voice" value="hi_female_normal" checked>
-<label for="normalVoice">Normal Female (TV Anchor)</label>
-
-<input type="radio" id="slowVoice" name="voice" value="hi_female_slow">
-<label for="slowVoice">Slow/Deep Female (Serious/Breaking)</label>
-
-<input type="radio" id="cheerfulVoice" name="voice" value="hi_female_cheerful">
-<label for="cheerfulVoice">Cheerful Female (Entertainment)</label>
-
-<input type="radio" id="calmVoice" name="voice" value="hi_female_calm">
-<label for="calmVoice">Calm Female (Weather/Commentary)</label>
-
-<input type="radio" id="urgentVoice" name="voice" value="hi_female_urgent">
-<label for="urgentVoice">Urgent Female (Emergency News)</label>
-
-<input type="radio" id="softVoice" name="voice" value="hi_female_soft">
-<label for="softVoice">Soft Female (Feature Stories)</label>
-</div>
+<select name="voice" id="voiceSelect">
+<option value="hi_female_normal">Normal Female (Standard TV Anchor)</option>
+<option value="hi_female_slow">Slow/Deep Female (Serious/Breaking News)</option>
+<option value="hi_female_cheerful">Cheerful Female (Entertainment/Showbiz)</option>
+<option value="hi_female_calm">Calm Female (Weather/Feature Stories)</option>
+<option value="hi_female_urgent">Urgent Female (Emergency News)</option>
+<option value="hi_female_soft">Soft Female (Feature/Interview)</option>
+</select>
 
 <label>Speed: <span id="speedVal">1.0</span>x</label>
 <input type="range" min="0.9" max="1.2" step="0.01" value="1.0" id="speedSlider">
@@ -88,7 +79,7 @@ const speedVal=document.getElementById("speedVal");
 const pitchVal=document.getElementById("pitchVal");
 const volumeVal=document.getElementById("volumeVal");
 
-// Recommended slider values for each voice style
+// Professional TV anchor slider defaults
 const VOICE_DEFAULTS = {
   "hi_female_normal": {speed:1.0, pitch:1.0, volume:1.0},
   "hi_female_slow": {speed:0.95, pitch:0.95, volume:1.0},
@@ -98,7 +89,6 @@ const VOICE_DEFAULTS = {
   "hi_female_soft": {speed:1.0, pitch:0.9, volume:0.9}
 };
 
-// Update slider labels
 function updateSliderLabels(){
     speedVal.innerText = speedSlider.value;
     pitchVal.innerText = pitchSlider.value;
@@ -106,14 +96,12 @@ function updateSliderLabels(){
 }
 
 // Auto-adjust sliders when voice changes
-document.querySelectorAll('input[name="voice"]').forEach(rb=>{
-    rb.addEventListener("change",()=>{
-        const defaults = VOICE_DEFAULTS[rb.value];
-        speedSlider.value = defaults.speed;
-        pitchSlider.value = defaults.pitch;
-        volumeSlider.value = defaults.volume;
-        updateSliderLabels();
-    });
+document.getElementById("voiceSelect").addEventListener("change", ()=>{
+    const defaults = VOICE_DEFAULTS[document.getElementById("voiceSelect").value];
+    speedSlider.value = defaults.speed;
+    pitchSlider.value = defaults.pitch;
+    volumeSlider.value = defaults.volume;
+    updateSliderLabels();
 });
 
 // Update labels on slider input
@@ -135,7 +123,7 @@ let countdownInterval=setInterval(()=>{if(timeLeft<=0)clearInterval(countdownInt
 previewBtn.addEventListener("click",async function(){
 const text=form.text.value.trim();
 if(!text){alert("  ");return;}
-const voice=document.querySelector('input[name="voice"]:checked').value;
+const voice=document.getElementById("voiceSelect").value;
 progressContainer.style.display="block";countdown.style.display="block";progressBar.style.width="0%";audioPreview.style.display="none";
 let width=0;let timeLeft=3;
 countdown.innerText=` Generating preview... ${timeLeft}s`;
