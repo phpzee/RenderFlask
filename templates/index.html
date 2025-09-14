@@ -7,7 +7,7 @@
 <style>
 body{font-family:Arial,sans-serif;background:#e6ffe6;margin:0;padding:0;}
 .container{max-width:720px;margin:30px auto;background:#fff;padding:25px;border-radius:15px;box-shadow:0 12px 28px rgba(0,0,0,0.25);}
-h1{text-align:center;color:green;font-size:1.3em;margin-bottom:20px;}
+h1{text-align:center;color:green;font-size:1.2em;margin-bottom:20px;}
 textarea{width:100%;height:180px;padding:12px;border-radius:12px;border:1px solid #ccc;resize:none;font-size:16px;}
 label{display:block;margin-top:10px;font-weight:bold;}
 select,input[type=range]{width:100%;margin-top:5px;padding:8px;border-radius:12px;font-size:16px;}
@@ -25,7 +25,7 @@ button:hover{background:darkgreen;}
 <h1>Hindi News Anchor Software developed by Khabar face2face</h1>
 
 <form id="ttsForm" method="POST" action="/convert">
-<textarea name="text" placeholder="Type your text here..."></textarea><br>
+<textarea name="text" placeholder="Type your news text here..."></textarea><br>
 
 <label>Voice Style:</label>
 <select name="voice" id="voiceSelect">
@@ -53,11 +53,11 @@ button:hover{background:darkgreen;}
 <div id="progressBarContainer">
 <div id="progressBar"></div>
 </div>
-<div id="countdown"> Please wait...</div>
+<div id="countdown">⏳ Please wait...</div>
 
 <audio controls class="audioPreview" id="audioPreview"></audio>
 
-<div class="footer"> 2025 Zeeshan Azmi | Hindi News Anchor</div>
+<div class="footer">© 2025 Zeeshan Azmi | Hindi News Anchor</div>
 </div>
 
 <script>
@@ -68,7 +68,6 @@ const countdown=document.getElementById("countdown");
 const previewBtn=document.getElementById("previewBtn");
 const audioPreview=document.getElementById("audioPreview");
 
-// Sliders
 const speedSlider=document.getElementById("speedSlider");
 const pitchSlider=document.getElementById("pitchSlider");
 const volumeSlider=document.getElementById("volumeSlider");
@@ -76,72 +75,43 @@ const speedVal=document.getElementById("speedVal");
 const pitchVal=document.getElementById("pitchVal");
 const volumeVal=document.getElementById("volumeVal");
 
-// Slider defaults
-const VOICE_DEFAULTS = {
-  "hi_female_normal": {speed:1.0, pitch:1.0, volume:1.0},
-  "hi_female_slow": {speed:0.95, pitch:0.95, volume:1.0},
-  "hi_female_cheerful": {speed:1.1, pitch:1.05, volume:1.0},
-  "hi_female_calm": {speed:0.95, pitch:1.0, volume:1.0},
-  "hi_female_urgent": {speed:1.15, pitch:1.0, volume:1.0},
-  "hi_female_soft": {speed:1.0, pitch:0.9, volume:0.9}
-};
-
 function updateSliderLabels(){
     speedVal.innerText = speedSlider.value;
     pitchVal.innerText = pitchSlider.value;
     volumeVal.innerText = volumeSlider.value;
 }
 
-// Auto-adjust sliders when voice changes
-document.getElementById("voiceSelect").addEventListener("change", ()=>{
-    const defaults = VOICE_DEFAULTS[document.getElementById("voiceSelect").value];
-    speedSlider.value = defaults.speed;
-    pitchSlider.value = defaults.pitch;
-    volumeSlider.value = defaults.volume;
-    updateSliderLabels();
-    triggerPreview(); // Auto live preview on voice change
-});
-
-// Update labels on slider input
+document.getElementById("voiceSelect").addEventListener("change", updateSliderLabels);
 speedSlider.oninput = pitchSlider.oninput = volumeSlider.oninput = updateSliderLabels;
 updateSliderLabels();
 
-// Clean text function: remove punctuation for reading but keep modulation info
-function cleanTextForSpeech(text){
-    return text.replace(/[!?]/g,'').trim(); // Punctuation removed from speech
-}
-
 // Form submit (MP3 download)
 form.addEventListener("submit",function(e){
-progressContainer.style.display="block";countdown.style.display="block";progressBar.style.width="0%";
-let width=0;let timeLeft=5;
-countdown.innerText=` Please wait... ${timeLeft}s`;
-let interval=setInterval(()=>{if(width>=100)clearInterval(interval);else width+=2;progressBar.style.width=width+"%";},50);
-let countdownInterval=setInterval(()=>{if(timeLeft<=0)clearInterval(countdownInterval);else countdown.innerText=` Please wait... ${timeLeft}s`;timeLeft--;},1000);
+progressContainer.style.display="block"; countdown.style.display="block"; progressBar.style.width="0%";
+let width=0; let timeLeft=5;
+countdown.innerText=`⏳ Please wait... ${timeLeft}s`;
+let interval=setInterval(()=>{if(width>=100)clearInterval(interval); else width+=2; progressBar.style.width=width+"%";},50);
+let countdownInterval=setInterval(()=>{if(timeLeft<=0)clearInterval(countdownInterval); else countdown.innerText=`⏳ Please wait... ${timeLeft}s`; timeLeft--;},1000);
 });
 
-// Live preview
-async function triggerPreview(){
-const rawText=form.text.value.trim();
-if(!rawText){audioPreview.style.display="none";return;}
-const text=cleanTextForSpeech(rawText);
+// Live preview with updated voice and natural reading
+previewBtn.addEventListener("click", async function(){
+const text=form.text.value.trim();
+if(!text){alert("Please enter text."); return;}
 const voice=document.getElementById("voiceSelect").value;
-progressContainer.style.display="block";countdown.style.display="block";progressBar.style.width="0%";audioPreview.style.display="none";
-let width=0;let timeLeft=3;
+progressContainer.style.display="block"; countdown.style.display="block"; progressBar.style.width="0%"; audioPreview.style.display="none";
+let width=0; let timeLeft=3;
 countdown.innerText=`Generating preview... ${timeLeft}s`;
-let interval=setInterval(()=>{if(width>=100)clearInterval(interval);else width+=3;progressBar.style.width=width+"%";},50);
-let countdownInterval=setInterval(()=>{if(timeLeft<=0)clearInterval(countdownInterval);else countdown.innerText=` Generating preview... ${timeLeft}s`;timeLeft--;},1000);
+let interval=setInterval(()=>{if(width>=100)clearInterval(interval); else width+=3; progressBar.style.width=width+"%";},50);
+let countdownInterval=setInterval(()=>{if(timeLeft<=0)clearInterval(countdownInterval); else countdown.innerText=`⏳ Generating preview... ${timeLeft}s`; timeLeft--;},1000);
 try{
-const formData=new FormData();formData.append("text",text);formData.append("voice",voice);
+const formData=new FormData(); formData.append("text", text); formData.append("voice", voice);
 const resp=await fetch("/preview",{method:"POST",body:formData});
 if(!resp.ok)throw new Error("Preview generation failed");
-const blob=await resp.blob();audioPreview.src=URL.createObjectURL(blob);audioPreview.style.display="block";
+const blob=await resp.blob(); audioPreview.src=URL.createObjectURL(blob); audioPreview.style.display="block";
 }catch(err){alert("Error: "+err.message);}
-finally{progressContainer.style.display="none";countdown.style.display="none";}
-}
-
-// Preview button
-previewBtn.addEventListener("click", triggerPreview);
+finally{progressContainer.style.display="none"; countdown.style.display="none";}
+});
 </script>
 </body>
 </html>
