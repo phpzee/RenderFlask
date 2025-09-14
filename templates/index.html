@@ -2,170 +2,145 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TTS News Anchor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      margin: 0;
       font-family: Arial, sans-serif;
       background: #e8f5e9;
       color: #333;
+      margin: 0;
+      padding: 0;
     }
     header {
       background: #2e7d32;
       color: white;
       text-align: center;
-      padding: 15px;
+      padding: 20px;
       font-size: 1.5em;
       font-weight: bold;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
     .container {
       max-width: 800px;
-      margin: auto;
+      margin: 20px auto;
+      background: white;
       padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     }
     textarea {
       width: 100%;
       height: 150px;
-      padding: 12px;
-      font-size: 16px;
-      border: 2px solid #2e7d32;
-      border-radius: 10px;
+      padding: 10px;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 8px;
       resize: vertical;
     }
     select, button {
-      padding: 12px 18px;
+      padding: 10px 15px;
       margin-top: 10px;
+      font-size: 1em;
       border: none;
       border-radius: 8px;
-      font-size: 16px;
       cursor: pointer;
     }
     select {
-      background: #a5d6a7;
-      color: #1b5e20;
+      background: #f1f1f1;
     }
     button {
       background: #2e7d32;
       color: white;
-      font-weight: bold;
     }
     button:hover {
       background: #1b5e20;
     }
     .progress {
       width: 100%;
-      height: 12px;
-      background: #c8e6c9;
-      border-radius: 6px;
+      background: #f0f0f0;
+      border-radius: 10px;
+      overflow: hidden;
       margin-top: 15px;
       display: none;
     }
     .progress-bar {
-      height: 100%;
       width: 0%;
+      height: 15px;
       background: #2e7d32;
-      border-radius: 6px;
-      transition: width 0.3s;
-    }
-    .audio-box {
-      margin-top: 20px;
-      display: none;
+      text-align: center;
+      color: white;
+      font-size: 0.8em;
     }
     footer {
       text-align: center;
-      padding: 15px;
-      color: #666;
+      padding: 10px;
       font-size: 0.9em;
+      color: #666;
     }
   </style>
 </head>
 <body>
-  <header>🎙️ Hindi & Urdu News Anchor TTS</header>
+  <header>🎙️ Hindi/Urdu News Anchor TTS</header>
   <div class="container">
-    <p>Enter your Hindi or Urdu text below and generate a natural news anchor style MP3.</p>
-    
-    <textarea id="ttsText" placeholder="Type Hindi/Urdu text here..."></textarea>
-    
-    <select id="lang">
-      <option value="hi">Hindi</option>
-      <option value="ur">Urdu</option>
-    </select>
-    
-    <button onclick="generateTTS()">Generate Voice</button>
-    
+    <p>Type or paste your Hindi/Urdu text below and download high-quality MP3 voice.</p>
+    <form id="ttsForm" method="POST" action="/tts">
+      <textarea name="text" placeholder="Type your news script here..."></textarea>
+      <br>
+      <label for="lang">Choose language:</label>
+      <select name="lang">
+        <option value="hi">Hindi</option>
+        <option value="ur">Urdu</option>
+        <option value="en">English</option>
+        <option value="mr">Marathi</option>
+      </select>
+      <br>
+      <button type="submit">Convert to MP3</button>
+    </form>
     <div class="progress" id="progress">
-      <div class="progress-bar" id="progressBar"></div>
-    </div>
-    
-    <div class="audio-box" id="audioBox">
-      <p><b>Playback:</b></p>
-      <audio controls id="ttsAudio"></audio>
-      <p><a id="downloadLink" href="#" download>Download MP3</a></p>
+      <div class="progress-bar" id="progressBar">0%</div>
     </div>
   </div>
-  
-  <footer>© 2025 TTS News Anchor | Powered by Zeeshan Azmi</footer>
-  
+  <footer>© 2025 TTS News Anchor App</footer>
+
   <script>
-    function simulateProgress() {
-      let progressBar = document.getElementById("progressBar");
-      let width = 0;
-      let interval = setInterval(() => {
-        if (width >= 90) {
-          clearInterval(interval);
-        } else {
-          width += 10;
-          progressBar.style.width = width + "%";
-        }
-      }, 300);
-    }
+    const form = document.getElementById("ttsForm");
+    const progress = document.getElementById("progress");
+    const progressBar = document.getElementById("progressBar");
 
-    async function generateTTS() {
-      const text = document.getElementById("ttsText").value.trim();
-      const lang = document.getElementById("lang").value;
-      const progress = document.getElementById("progress");
-      const progressBar = document.getElementById("progressBar");
-      const audioBox = document.getElementById("audioBox");
-      const audioPlayer = document.getElementById("ttsAudio");
-      const downloadLink = document.getElementById("downloadLink");
-
-      if (!text) {
-        alert("⚠️ Please enter some text first!");
-        return;
-      }
-
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
       progress.style.display = "block";
-      progressBar.style.width = "0%";
-      simulateProgress();
+      progressBar.style.width = "30%";
+      progressBar.textContent = "Processing...";
 
-      try {
-        let res = await fetch("/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text, lang })
-        });
+      const formData = new FormData(form);
 
-        let data = await res.json();
-        if (data.error) {
-          alert("❌ Error: " + data.error);
-          progress.style.display = "none";
-          return;
-        }
-
+      fetch("/tts", {
+        method: "POST",
+        body: formData
+      })
+      .then(response => {
+        if (!response.ok) throw new Error("Server error");
+        progressBar.style.width = "70%";
+        progressBar.textContent = "Almost done...";
+        return response.blob();
+      })
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "tts_output.mp3";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
         progressBar.style.width = "100%";
-        setTimeout(() => { progress.style.display = "none"; }, 1000);
-
-        audioBox.style.display = "block";
-        audioPlayer.src = data.file_url;
-        downloadLink.href = data.file_url;
-
-      } catch (err) {
-        alert("❌ Something went wrong: " + err);
+        progressBar.textContent = "Done!";
+      })
+      .catch(err => {
+        alert("Error: " + err.message);
         progress.style.display = "none";
-      }
-    }
+      });
+    });
   </script>
 </body>
 </html>
