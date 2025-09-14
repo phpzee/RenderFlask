@@ -18,12 +18,14 @@ button:hover{background:darkgreen;}
 #countdown{margin-top:10px;font-weight:bold;color:darkgreen;display:none;text-align:center;}
 .audioPreview{margin-top:15px;display:none;width:100%;}
 .footer{margin-top:25px;font-size:0.9em;color:#555;text-align:center;}
+.controls label{margin-top:10px;}
 </style>
 </head>
 <body>
 <div class="container">
 <h1>Hindi News Anchor Software developed by Khabar face2face</h1>
 
+<!-- =================== MP3 Download TTS =================== -->
 <form id="ttsForm" method="POST" action="/convert">
 <textarea name="text" placeholder="Please type here..."></textarea><br>
 
@@ -56,40 +58,71 @@ button:hover{background:darkgreen;}
 <div id="countdown">⏳ Please wait...</div>
 
 <audio controls class="audioPreview" id="audioPreview"></audio>
-
-<div class="footer">© 2025 Zeeshan Azmi | Hindi News Anchor</div>
 </div>
 
+<!-- =================== Interactive Live Hindi News Anchor =================== -->
+<div class="container" style="margin-top:40px;">
+<h2 style="text-align:center; color:green; font-size:1.2em; margin-bottom:20px;">
+Interactive Live Hindi News Anchor (Client-Side)
+</h2>
+
+<textarea id="liveTextInput" placeholder="Type your article here..."></textarea>
+
+<div class="controls">
+<label>Pitch: <span id="livePitchVal">1.0</span></label>
+<input type="range" id="livePitchSlider" min="0.8" max="1.2" step="0.01" value="1.0">
+
+<label>Rate: <span id="liveRateVal">1.0</span></label>
+<input type="range" id="liveRateSlider" min="0.8" max="1.2" step="0.01" value="1.0">
+
+<label>Volume: <span id="liveVolumeVal">1.0</span></label>
+<input type="range" id="liveVolumeSlider" min="0.5" max="1.0" step="0.01" value="1.0">
+</div>
+
+<button id="liveSpeakBtn">Speak From Cursor</button>
+<p style="font-size:0.9em; color:#555; margin-top:10px;">
+Note: Commas will add a short pause. Multiple spaces are ignored. Punctuation like । ! ? will not be read.
+</p>
+</div>
+
+<div class="footer">© 2025 Zeeshan Azmi | Hindi News Anchor</div>
+
 <script>
-const form = document.getElementById("ttsForm");
-const progressContainer = document.getElementById("progressBarContainer");
-const progressBar = document.getElementById("progressBar");
-const countdown = document.getElementById("countdown");
-const previewBtn = document.getElementById("previewBtn");
-const audioPreview = document.getElementById("audioPreview");
+// --- MP3 Download Section ---
+const form=document.getElementById("ttsForm");
+const progressContainer=document.getElementById("progressBarContainer");
+const progressBar=document.getElementById("progressBar");
+const countdown=document.getElementById("countdown");
+const previewBtn=document.getElementById("previewBtn");
+const audioPreview=document.getElementById("audioPreview");
 
-const speedSlider = document.getElementById("speedSlider");
-const pitchSlider = document.getElementById("pitchSlider");
-const volumeSlider = document.getElementById("volumeSlider");
-const speedVal = document.getElementById("speedVal");
-const pitchVal = document.getElementById("pitchVal");
-const volumeVal = document.getElementById("volumeVal");
+// Sliders
+const speedSlider=document.getElementById("speedSlider");
+const pitchSlider=document.getElementById("pitchSlider");
+const volumeSlider=document.getElementById("volumeSlider");
+const speedVal=document.getElementById("speedVal");
+const pitchVal=document.getElementById("pitchVal");
+const volumeVal=document.getElementById("volumeVal");
 
-function updateSliderLabels() {
+// Voice defaults
+const VOICE_DEFAULTS = {
+  "hi_female_normal": {speed:1.0, pitch:1.0, volume:1.0},
+  "hi_female_slow": {speed:0.95, pitch:0.95, volume:1.0},
+  "hi_female_cheerful": {speed:1.1, pitch:1.05, volume:1.0},
+  "hi_female_calm": {speed:0.95, pitch:1.0, volume:1.0},
+  "hi_female_urgent": {speed:1.15, pitch:1.0, volume:1.0},
+  "hi_female_soft": {speed:1.0, pitch:0.9, volume:0.9}
+};
+
+function updateSliderLabels(){
     speedVal.innerText = speedSlider.value;
     pitchVal.innerText = pitchSlider.value;
     volumeVal.innerText = volumeSlider.value;
 }
 
+// Adjust sliders on voice change
 document.getElementById("voiceSelect").addEventListener("change", ()=>{
-    const defaults = {
-      "hi_female_normal": {speed:1.0, pitch:1.0, volume:1.0},
-      "hi_female_slow": {speed:0.95, pitch:0.95, volume:1.0},
-      "hi_female_cheerful": {speed:1.1, pitch:1.05, volume:1.0},
-      "hi_female_calm": {speed:0.95, pitch:1.0, volume:1.0},
-      "hi_female_urgent": {speed:1.15, pitch:1.0, volume:1.0},
-      "hi_female_soft": {speed:1.0, pitch:0.9, volume:0.9}
-    }[document.getElementById("voiceSelect").value];
+    const defaults = VOICE_DEFAULTS[document.getElementById("voiceSelect").value];
     speedSlider.value = defaults.speed;
     pitchSlider.value = defaults.pitch;
     volumeSlider.value = defaults.volume;
@@ -99,33 +132,120 @@ document.getElementById("voiceSelect").addEventListener("change", ()=>{
 speedSlider.oninput = pitchSlider.oninput = volumeSlider.oninput = updateSliderLabels;
 updateSliderLabels();
 
-function startProgress(timeSec=5){
-    progressContainer.style.display="block"; countdown.style.display="block"; progressBar.style.width="0%";
-    let width=0; let timeLeft=timeSec;
-    countdown.innerText=`⏳ Please wait... ${timeLeft}s`;
-    let interval=setInterval(()=>{if(width>=100)clearInterval(interval); else width+=2; progressBar.style.width=width+"%";},50);
-    let countdownInterval=setInterval(()=>{if(timeLeft<=0)clearInterval(countdownInterval); else countdown.innerText=`⏳ Please wait... ${timeLeft}s`; timeLeft--;},1000);
+// Form submit
+form.addEventListener("submit",function(e){
+progressContainer.style.display="block";countdown.style.display="block";progressBar.style.width="0%";
+let width=0;let timeLeft=5;
+countdown.innerText=`⏳ Please wait... ${timeLeft}s`;
+let interval=setInterval(()=>{if(width>=100)clearInterval(interval);else width+=2;progressBar.style.width=width+"%";},50);
+let countdownInterval=setInterval(()=>{if(timeLeft<=0)clearInterval(countdownInterval);else countdown.innerText=`⏳ Please wait... ${timeLeft}s`;timeLeft--;},1000);
+});
+
+// Live preview
+previewBtn.addEventListener("click",async function(){
+const text=form.text.value.trim();
+if(!text){alert("Please enter text.");return;}
+const voice=document.getElementById("voiceSelect").value;
+progressContainer.style.display="block";countdown.style.display="block";progressBar.style.width="0%";audioPreview.style.display="none";
+let width=0;let timeLeft=3;
+countdown.innerText=`Generating preview... ${timeLeft}s`;
+let interval=setInterval(()=>{if(width>=100)clearInterval(interval);else width+=3;progressBar.style.width=width+"%";},50);
+let countdownInterval=setInterval(()=>{if(timeLeft<=0)clearInterval(countdownInterval);else countdown.innerText=`⏳ Generating preview... ${timeLeft}s`;timeLeft--;},1000);
+try{
+const formData=new FormData();formData.append("text",text);formData.append("voice",voice);
+const resp=await fetch("/preview",{method:"POST",body:formData});
+if(!resp.ok)throw new Error("Preview generation failed");
+const blob=await resp.blob();audioPreview.src=URL.createObjectURL(blob);audioPreview.style.display="block";
+}catch(err){alert("Error: "+err.message);}
+finally{progressContainer.style.display="none";countdown.style.display="none";}
+});
+
+// --- Interactive Live TTS Section ---
+const liveTextInput = document.getElementById("liveTextInput");
+const liveSpeakBtn = document.getElementById("liveSpeakBtn");
+const livePitchSlider = document.getElementById("livePitchSlider");
+const liveRateSlider = document.getElementById("liveRateSlider");
+const liveVolumeSlider = document.getElementById("liveVolumeSlider");
+const livePitchVal = document.getElementById("livePitchVal");
+const liveRateVal = document.getElementById("liveRateVal");
+const liveVolumeVal = document.getElementById("liveVolumeVal");
+
+function updateLiveLabels(){
+    livePitchVal.innerText = livePitchSlider.value;
+    liveRateVal.innerText = liveRateSlider.value;
+    liveVolumeVal.innerText = liveVolumeSlider.value;
+}
+livePitchSlider.oninput = liveRateSlider.oninput = liveVolumeSlider.oninput = updateLiveLabels;
+updateLiveLabels();
+
+// Split text into words ignoring extra spaces
+function splitWords(text){
+    text = text.replace(/\s+/g,' '); 
+    return text.match(/[^ ,]+|[,]/g) || [];
 }
 
-previewBtn.addEventListener("click", async function(){
-    const text = form.text.value.trim();
-    if(!text){alert("Please enter text."); return;}
-    const voice = document.getElementById("voiceSelect").value;
-    startProgress(3);
-    audioPreview.style.display="none";
+// Speak from cursor
+function liveSpeakFromCursor(){
+    const selStart = liveTextInput.selectionStart;
+    const fullText = liveTextInput.value;
+    let words = splitWords(fullText);
 
-    try{
-        // Clean punctuation before sending to server
-        const cleanText = text.replace(/[।!?.,“”"']/g,'').replace(/\s+/g,' ').trim();
-        const formData = new FormData(); formData.append("text", cleanText); formData.append("voice", voice);
-        const resp = await fetch("/preview",{method:"POST",body:formData});
-        if(!resp.ok) throw new Error("Preview generation failed");
-        const blob = await resp.blob();
-        audioPreview.src = URL.createObjectURL(blob);
-        audioPreview.style.display="block";
-    }catch(err){alert("Error: "+err.message);}
-    finally{progressContainer.style.display="none"; countdown.style.display="none";}
-});
+    let charCount = 0;
+    let startIdx = 0;
+    for(let i=0;i<words.length;i++){
+        if(charCount + words[i].length >= selStart){
+            startIdx = i;
+            break;
+        }
+        charCount += words[i].length + 1;
+    }
+
+    window.speechSynthesis.cancel();
+
+    function speakWord(idx){
+        if(idx >= words.length) return;
+        let word = words[idx];
+        if(word === ','){
+            setTimeout(()=>speakWord(idx+1), 300);
+            charCount += 1;
+            return;
+        }
+
+        // Skip other punctuations
+        if(/[।!?]/.test(word)){
+            charCount += word.length;
+            speakWord(idx+1);
+            return;
+        }
+
+        const utter = new SpeechSynthesisUtterance(word);
+        utter.lang = "hi-IN";
+        utter.pitch = parseFloat(livePitchSlider.value);
+        utter.rate = parseFloat(liveRateSlider.value);
+        utter.volume = parseFloat(liveVolumeSlider.value);
+
+        utter.onstart = ()=>{
+            const before = words.slice(0,idx).join(' ');
+            const after = words.slice(idx+1).join(' ');
+            liveTextInput.value = before + ' ' + word + ' ' + after;
+            liveTextInput.focus();
+            liveTextInput.setSelectionRange(charCount,charCount+word.length);
+        };
+
+        utter.onend = ()=>{
+            charCount += word.length + 1;
+            speakWord(idx+1);
+        };
+
+        window.speechSynthesis.speak(utter);
+    }
+
+    speakWord(startIdx);
+}
+
+liveSpeakBtn.onclick = liveSpeakFromCursor;
 </script>
 </body>
 </html>
+
+
